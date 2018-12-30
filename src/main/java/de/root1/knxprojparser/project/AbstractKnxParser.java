@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2016 Alexander Christian <alex(at)root1.de>. All rights reserved.
- * 
+ *
  * This file is part of KnxProjParser.
  *
  *   KnxProjParser is free software: you can redistribute it and/or modify
@@ -18,7 +18,6 @@
  */
 package de.root1.knxprojparser.project;
 
-import de.root1.knxprojparser.GroupAddress;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
@@ -27,13 +26,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+
 import org.xml.sax.SAXException;
+
+import de.root1.knxprojparser.GroupAddress;
 
 /**
  *
@@ -108,6 +111,7 @@ public abstract class AbstractKnxParser <T>{
 
     final List<de.root1.knxprojparser.GroupAddress> gaList = new ArrayList<>();
     final de.root1.knxprojparser.Project project = new de.root1.knxprojparser.Project();
+	private boolean validate = true;
 
     AbstractKnxParser(String resource, File f) throws SAXException {
         XSD_PROJECT = AbstractKnxParser.class.getResource(resource);
@@ -127,26 +131,26 @@ public abstract class AbstractKnxParser <T>{
     <T> T readXML(File xmlDatei, Class<T> clss)
             throws JAXBException, SAXException {
         Unmarshaller unmarshaller = getCachedUnmarsheller(clss.getPackage().getName());
-        unmarshaller.setSchema(schema);
+        unmarshaller.setSchema(validate ? schema : null);
         return clss.cast(unmarshaller.unmarshal(xmlDatei));
 
     }
-    
+
     public abstract void parse() throws ParseException;
 
     public de.root1.knxprojparser.Project getProject() {
-        
+
         List<GroupAddress> groupaddressList = project.getGroupaddressList();
         groupaddressList.sort(new Comparator<GroupAddress>(){
             @Override
             public int compare(GroupAddress o1, GroupAddress o2) {
-                
+
                 String[] ga1 = o1.getAddress().split("/");
                 String[] ga2 = o2.getAddress().split("/");
-                
+
                 int i1 = Integer.parseInt(ga1[0]) <<11 | Integer.parseInt(ga1[1]) <<8 | Integer.parseInt(ga1[2]);
                 int i2 = Integer.parseInt(ga2[0]) <<11 | Integer.parseInt(ga2[1]) <<8 | Integer.parseInt(ga2[2]);
-                
+
                 if (i1<i2) {
                     return -1;
                 }
@@ -155,15 +159,20 @@ public abstract class AbstractKnxParser <T>{
                 }
                 return 0;
             }
-            
+
         });
         return project;
     }
-    
+
     public boolean isParsed() {
         return parsed;
     };
-    
+
+    public void setValidate(boolean validate) {
+		this.validate = validate;
+	}
+
     public abstract boolean parserMatch();
+
 
 }

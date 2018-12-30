@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2016 Alexander Christian <alex(at)root1.de>. All rights reserved.
- * 
+ *
  * This file is part of KnxProjParser.
  *
  *   KnxProjParser is free software: you can redistribute it and/or modify
@@ -18,21 +18,12 @@
  */
 package de.root1.knxprojparser;
 
-import de.root1.knxprojparser.project.AbstractKnxParser;
-import de.root1.knxprojparser.project.ParseException;
-import de.root1.knxprojparser.project.Project11;
-import de.root1.knxprojparser.project.Project12;
-import de.root1.knxprojparser.project.Project13;
-import de.root1.knxprojparser.project.Project14;
-import de.root1.schema.knxproj._1.EtsDefined;
-import de.root1.schema.knxproj._1.KnxProj;
-import de.root1.schema.knxproj._1.ObjectFactory;
-import de.root1.schema.knxproj._1.UserDefined;
+import static java.lang.Thread.interrupted;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import static java.lang.Thread.interrupted;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.FileVisitResult;
@@ -45,14 +36,26 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+
 import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
+
+import de.root1.knxprojparser.project.AbstractKnxParser;
+import de.root1.knxprojparser.project.ParseException;
+import de.root1.knxprojparser.project.Project11;
+import de.root1.knxprojparser.project.Project12;
+import de.root1.knxprojparser.project.Project13;
+import de.root1.knxprojparser.project.Project14;
+import de.root1.schema.knxproj._1.EtsDefined;
+import de.root1.schema.knxproj._1.KnxProj;
+import de.root1.schema.knxproj._1.ObjectFactory;
+import de.root1.schema.knxproj._1.UserDefined;
 
 /**
  *
@@ -61,6 +64,7 @@ import org.xml.sax.SAXException;
 public class KnxProjParser {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private boolean validateWithSchema = true;
 
     private static final Class[] AVAILABLE_PARSERS = {
         Project11.class,
@@ -111,6 +115,7 @@ public class KnxProjParser {
                 Constructor constructor = AVAILABLE_PARSERS[i].getConstructor(File.class);
                 parser = (AbstractKnxParser) constructor.newInstance(knxProjFolder);
                 if (parser.parserMatch()) {
+                	parser.setValidate(validateWithSchema);
                     break;
                 } else {
                     parser = null;
@@ -156,10 +161,14 @@ public class KnxProjParser {
         }
     }
 
+    public void setValidateWithSchema(boolean validateWithSchema) {
+		this.validateWithSchema = validateWithSchema;
+	}
+
     public Project getProject() {
         return project;
     }
-    
+
     public void readXml(File infile) throws ParserException {
         if (!infile.exists()) {
             throw new ParserException("file "+infile.getAbsolutePath()+" does nt exist.");
@@ -175,13 +184,13 @@ public class KnxProjParser {
             project.setToolVersion(p.getToolVersion());
             project.setLastModified(Utils.xmlDateTimeToDate(p.getLastModified()));
             project.setProjectStart(Utils.xmlDateTimeToDate(p.getProjectStarted()));
-            
+
             List<de.root1.schema.knxproj._1.GroupAddress> etsAddresses = etsDefined.getGroupAddresses().getGroupAddress();
             List<de.root1.schema.knxproj._1.GroupAddress> userAddresses = userDefined.getGroupAddresses().getGroupAddress();
-            
+
             Set<GroupAddress> gaSet = new HashSet<>();
-            
-            
+
+
             for (de.root1.schema.knxproj._1.GroupAddress addr : etsAddresses) {
                 // replace = remove first, then add
                 GroupAddress ga = new GroupAddress(addr.getAddress(), addr.getName(), addr.getDPT());
@@ -194,10 +203,10 @@ public class KnxProjParser {
                 gaSet.remove(ga);
                 gaSet.add(ga);
             }
-            
+
             project.setGroupaddressList(new ArrayList<GroupAddress>(gaSet));
-            
-            
+
+
         } catch (JAXBException | SAXException ex) {
             throw new ParserException("Not able to read xml", ex);
         }
@@ -254,7 +263,7 @@ public class KnxProjParser {
         }
 
         Project parsed = this.project;
-        
+
         EtsDefined etsDefined = knxproj.getEtsDefined();
         UserDefined userDefined = knxproj.getUserDefined();
         etsDefined.setChecksum(newChecksum);
@@ -290,7 +299,7 @@ public class KnxProjParser {
             if (ga.getAddress().equals("15/7/255")) {
                 etsKonnektingGaFound = true;
             }
-            
+
             insertGa.setAddress(ga.getAddress());
             insertGa.setName(ga.getName());
             insertGa.setDPT(ga.getDPT());
@@ -302,7 +311,7 @@ public class KnxProjParser {
                 gaList.add(insertGa);
             }
         }
-        
+
         boolean userKonnektingGaFound = false;
         for(de.root1.schema.knxproj._1.GroupAddress ga : userDefined.getGroupAddresses().getGroupAddress()) {
             if (ga.getAddress().equals("15/7/255")) {
@@ -310,7 +319,7 @@ public class KnxProjParser {
                 break;
             }
         }
-        
+
         if (!etsKonnektingGaFound && !userKonnektingGaFound) {
             de.root1.schema.knxproj._1.GroupAddress konnektingGa = new de.root1.schema.knxproj._1.GroupAddress();
             konnektingGa.setName("KONNEKTING.Programming");
@@ -356,7 +365,7 @@ public class KnxProjParser {
         } catch (IOException ex) {
         }
     }
-    
+
     static class Dots implements Runnable {
 
         @Override
@@ -371,13 +380,13 @@ public class KnxProjParser {
                     }
                 }
             }
-        
+
     }
 
     public static void main(String[] args) throws FileNotFoundException, ParserException, IOException, FileNotSupportedException {
         System.out.println("["+props.getProperty("name", "KnxProjParser")+"]");
         File f = new File(args[0]);
-        
+
         if (Boolean.getBoolean("supppressFilePath")) {
             System.out.print("Reading " + f.getName());
         } else {
@@ -389,14 +398,14 @@ public class KnxProjParser {
         KnxProjParser parser = new KnxProjParser();
         t0.interrupt();
         System.out.println(" OK");
-        
+
         System.out.print("Parsing ");
         Thread t1 = new Thread(new Dots());
         t1.setDaemon(true);
         t1.start();
         parser.parse(new File(args[0]));
         System.out.println(" OK");
-        
+
         System.out.print("Exporting ");
         Thread t2 = new Thread(new Dots());
         t2.setDaemon(true);
@@ -404,11 +413,11 @@ public class KnxProjParser {
         boolean result = parser.exportXml(new File(args[0]), new File(args[0] + ".parsed.xml"));
         t2.interrupt();
         System.out.println((result?" OK":" Same file already present, no export required."));
-        
+
         System.out.println("DONE!");
         System.out.println("");
     }
-    
+
     public static boolean hasDPT(GroupAddress ga) {
         return ga.getDPT()!=null && !ga.getDPT().isEmpty() && !ga.getDPT().equals("0.000");
     }
