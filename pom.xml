@@ -2,7 +2,7 @@
 <!--
 /*
  * Copyright (C) 2016 Alexander Christian <alex(at)root1.de>. All rights reserved.
- * 
+ *
  * This file is part of KnxProjParser.
  *
  *   KnxProjParser is free software: you can redistribute it and/or modify
@@ -31,7 +31,7 @@
         <maven.compiler.source>10</maven.compiler.source>
         <maven.compiler.target>10</maven.compiler.target>
     </properties>
-    
+
     <build>
         <resources>
             <resource>
@@ -40,7 +40,7 @@
             </resource>
         </resources>
         <plugins>
-            
+
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
@@ -57,10 +57,10 @@
                     </descriptorRefs>
                 </configuration>
             </plugin>
-            
-            <!-- 
-            include generated jaxb sources. On 2nd build without clean, 
-            jaxb stuff is not automatically added to classpath/compile path, 
+
+            <!--
+            include generated jaxb sources. On 2nd build without clean,
+            jaxb stuff is not automatically added to classpath/compile path,
             so we need to add it to be able to compile the not-generated sources
             -->
             <plugin>
@@ -81,7 +81,7 @@
                     </execution>
                 </executions>
             </plugin>
-            
+
             <!-- Plugin required to build java classes from XSD using XJC -->
 <!--            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -100,7 +100,7 @@
                     </sources>
                 </configuration>
             </plugin>-->
-            
+
             <plugin>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-xjc-plugin</artifactId>
@@ -124,7 +124,7 @@
                                     <xsd>${basedir}/src/main/resources/xsd/KnxProj_1.xsd</xsd>
                                     <packagename>de.root1.schema.knxproj._1</packagename>
                                 </xsdOption>
-                                
+
                                 <xsdOption>
                                     <xsd>${basedir}/src/main/resources/xsd/project/Project_11.xsd</xsd>
                                     <packagename>org.knx.xml.project._11</packagename>
@@ -141,7 +141,7 @@
                                     <xsd>${basedir}/src/main/resources/xsd/project/Project_14.xsd</xsd>
                                     <packagename>org.knx.xml.project._14</packagename>
                                 </xsdOption>
-                                
+
                             </xsdOptions>
                         </configuration>
                     </execution>
@@ -154,7 +154,7 @@
                     </dependency>
                 </dependencies>
             </plugin>
-            
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -167,10 +167,43 @@
                     </archive>
                 </configuration>
             </plugin>
-             
+
         </plugins>
+
+        <pluginManagement>
+          <plugins>
+            <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
+            <plugin>
+              <groupId>org.eclipse.m2e</groupId>
+              <artifactId>lifecycle-mapping</artifactId>
+              <version>1.0.0</version>
+              <configuration>
+                <lifecycleMappingMetadata>
+                  <pluginExecutions>
+                    <pluginExecution>
+                      <pluginExecutionFilter>
+                        <groupId>org.apache.cxf</groupId>
+                        <artifactId>cxf-xjc-plugin</artifactId>
+                        <versionRange>[3.2.3,)</versionRange>
+                        <goals>
+                          <goal>xsdtojava</goal>
+                        </goals>
+                      </pluginExecutionFilter>
+                      <action>
+                        <execute>
+                          <runOnIncremental>false</runOnIncremental>
+                          <runOnConfiguration>true</runOnConfiguration>
+                        </execute>
+                      </action>
+                    </pluginExecution>
+                  </pluginExecutions>
+                </lifecycleMappingMetadata>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
     </build>
-    
+
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -196,7 +229,7 @@
             <version>1.0.1</version>
             <scope>test</scope>
         </dependency>
-        
+
         <!-- since java9 no longer part of jre/jdk -->
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
@@ -207,11 +240,11 @@
             <groupId>com.sun.activation</groupId>
             <artifactId>javax.activation</artifactId>
             <version>1.2.0</version>
-        </dependency>        
-        
+        </dependency>
+
     </dependencies>
-    
-        
+
+
     <repositories>
         <repository>
             <id>root1-releases</id>
@@ -222,7 +255,7 @@
             <url>http://maven.root1.de/repository/snapshots/</url>
         </repository>
     </repositories>
-    
+
     <!-- upload informations for deploying the jar -->
     <distributionManagement>
         <repository>
@@ -234,6 +267,6 @@
             <id>root1-snapshots</id>
             <name>internal snapshots</name>
             <url>http://maven.root1.de/repository/snapshots/</url>
-        </snapshotRepository>      
-    </distributionManagement>  
+        </snapshotRepository>
+    </distributionManagement>
 </project>
